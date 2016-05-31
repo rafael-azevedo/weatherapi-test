@@ -11,7 +11,7 @@ import (
 func main() {
 	mw := multiWeatherProvider{
 		openWeatherMap{},
-		weatherUnderground{apiKey: "f32050ce31a6534d"},
+		weatherUnderground{apiKey: ""},
 	}
 
 	http.HandleFunc("/weather/", func(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +59,7 @@ type weatherUnderground struct {
 type multiWeatherProvider []weatherProvider
 
 func (w openWeatherMap) temperature(city string) (float64, error) {
-	resp, err := http.Get("http://api.openweathermap.org/data/2.5/weather?APPID=8198b96e4b32c5744089b5cdfd2d8809&q=" + city)
+	resp, err := http.Get("http://api.openweathermap.org/data/2.5/weather?APPID=&q=" + city)
 	if err != nil {
 		return 0, err
 	}
