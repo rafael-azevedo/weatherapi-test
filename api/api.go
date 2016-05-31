@@ -1,4 +1,6 @@
-package main
+package api
+
+var GoogleGeocodeURL string = "https://maps.googleapis.com/maps/api/geocode/json?"
 
 // WeatherData is a struct for the weather data the comes from the api calls
 type WeatherData struct {
@@ -6,6 +8,18 @@ type WeatherData struct {
 	Main struct {
 		Kelvin float64 `json:"temp"`
 	} `json:"main"`
+}
+
+type GoogleGeocodeResponse struct {
+	Results []struct {
+		FormattedAddress string `json:"formatted_address"`
+		Geometry         struct {
+			Location struct {
+				Lat float64 `json:"lat"`
+				Lng float64 `json:"lng"`
+			} `json:"location"`
+		} `json:"geometry"`
+	}
 }
 
 // GoogleAPI struct hold google api key

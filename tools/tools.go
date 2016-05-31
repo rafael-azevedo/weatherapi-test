@@ -1,4 +1,4 @@
-package main
+package tools
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ func Hello(w http.ResponseWriter, r *http.Request) {
 
 // Temperature returns temperature of city in kelvin for OpenWeatherMap Struct
 func (w OpenWeatherMap) Temperature(city string) (float64, error) {
-	resp, err := http.Get("http://api.openweathermap.org/data/2.5/weather?APPID=" + w.apiKey + "&q=" + city)
+	resp, err := http.Get("http://OpenWeatherMap.org/data/2.5/weather?APPID=" + w.apiKey + "&q=" + city)
 	if err != nil {
 		return 0, err
 	}
@@ -86,11 +86,26 @@ func (w MultiWeatherProvider) Temperature(city string) (float64, error) {
 	return sum / float64(len(w)), nil
 }
 
-func (g GoogleApi) (float64, float64) {
-    var log float64
-    var lat float64
-    return log, lat
+// GetLocation gets long and lat of an address
+func GetLocation(city string) (float64, float64, error) {
+	ga := GoogleAPI{apikey: ""}
+	resp, err := http.Get(GoogleGeocodeURL + "address=" + city + "&key=" + ga.apikey)
+	if err != nil {
+		return 0, 0, err
+	}
+	var gs GoogleGeocodeResponse
+
+	defer resp.Body.Close()
+
+	if err := json.NewDecoder(resp.Body).Decode(&gs); err != nil {
+		return 0, 0, err
+	}
+
+	lat := gs.Results[0].Geometry.Location.Lat
+	lng := gs.Results[0].Geometry.Location.Lng
+	return lat, lng, err
 }
+
 // Temperature returns temperature of city in kelvin for multiple providers depreciated
 //func Temperature(city string, providers ...WeatherProvider) (float64, error) {
 //	sum := 0.0
@@ -106,3 +121,53 @@ func (g GoogleApi) (float64, float64) {
 //
 //	return sum / float64(len(providers)), nil
 //}
+
+var GoogleGeocodeURL string = "https://maps.googleapis.com/maps/api/geocode/json?"
+
+// WeatherData is a struct for the weather data the comes from the api calls
+type WeatherData struct {
+	Name string `json:"name"`
+	Main struct {
+		Kelvin float64 `json:"temp"`
+	} `json:"main"`
+}
+
+type GoogleGeocodeResponse struct {
+	Results []struct {
+		FormattedAddress string `json:"formatted_address"`
+		Geometry         struct {
+			Location struct {
+				Lat float64 `json:"lat"`
+				Lng float64 `json:"lng"`
+			} `json:"location"`
+		} `json:"geometry"`
+	}
+}
+
+// GoogleAPI struct hold google api key
+type GoogleAPI struct {
+	apikey string
+}
+
+// OpenWeatherMap struct to fufill weatherProvider interace
+type OpenWeatherMap struct {
+	apiKey string
+}
+
+// WeatherUnderground struct to fulfill weatherProvider interface
+type WeatherUnderground struct {
+	apiKey string
+}
+
+// ForecastIO struct to fulfill weatherProvider interface
+type ForecastIO struct {
+	apiKey string
+}
+
+// WeatherProvider interface can be fufilled with any struct that can fulfill the temperature func
+type WeatherProvider interface {
+	Temperature(city string) (float64, error) // in Kelvin, naturally
+}
+
+// MultiWeatherProvider slice can hold multiple weatherProvider structs
+type MultiWeatherProvider []WeatherProvider
